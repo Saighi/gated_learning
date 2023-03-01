@@ -45,19 +45,28 @@ w :1
 dwindow/dt = -window/tau_window :1 (event-driven)
 dwindow_dep/dt = -window_dep/tau_window : 1 (event-driven)
 '''
+#on_pre_syn = '''
+#v_post+=w
+#window+=1
+#w-= window_dep*beta
+#'''
+
 on_pre_syn = '''
 v_post+=w
 window+=1 
-w-= window_dep*beta
+w-= beta
 '''
 
 when_learning = """
-w+= window*beta
+w+= (window*beta)
 window_dep+=1
 """
 
+#syn_input_output = Synapses(input, output, model=model_syn, on_pre={"pre": on_pre_syn},
+#                            on_post={"induce_learning": when_learning, "post": "w = clip(w-(beta/4),0,1000)"},
+#                            on_event={"pre": 'spike', "induce_learning": "open_gate"})
 syn_input_output = Synapses(input, output, model=model_syn, on_pre={"pre": on_pre_syn},
-                            on_post={"induce_learning": when_learning, "post": "w = clip(w-(beta/4),0,1000)"},
+                            on_post={"induce_learning": when_learning},
                             on_event={"pre": 'spike', "induce_learning": "open_gate"})
 syn_input_output.connect()
 syn_input_output.w = 0.3
@@ -67,7 +76,7 @@ to_record = list(range(0, nb_inputs))
 #S = StateMonitor(syn_input_output, 'w', record=to_record)
 spikemon = SpikeMonitor(output)
 
-run(100000 * ms)
+run(250000 * ms)
 """
 plot(M.t / ms, M.v[0])
 xlabel('Time (ms)')
