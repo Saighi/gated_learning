@@ -3,8 +3,9 @@ import numpy as np
 from brian2 import *
 from tools import *
 
-nb_inputs = 10000
-nb_students = 100
+nb_stud_connect = 60
+nb_students = 50
+nbtot_connections = nb_students * nb_stud_connect
 inhib_post_val = 0.1/nb_students #Prev 0.3
 data = np.loadtxt('spiketrains_0_input_pattern')
 indices = data[:, 1].astype(int)
@@ -46,7 +47,7 @@ start_scope()
 
 """NEURONS"""
 
-network_input = SpikeGeneratorGroup(nb_inputs, indices_inputs, times_inputs)
+network_input = SpikeGeneratorGroup(nbtot_connections, indices_inputs, times_inputs)
 teacher = NeuronGroup(1, eqs_teacher, threshold='v>1', reset='v=0', method='exact')
 student = NeuronGroup(nb_students, eqs, threshold='v>1', reset='v = 0', method='exact',
                       events={'open_gate': 'learning_gate > 0.5'})
@@ -89,9 +90,7 @@ syn_input_student = Synapses(network_input, student, model=model_syn, on_pre={"p
                              on_post={"induce_learning": when_learning},
                              on_event={"pre": 'spike', "induce_learning": "open_gate"})
 # Each student is connected to X inputs, then the number of connections is nb_student*X
-nb_stud_connect = 60
-nbtot_connections = nb_students * nb_stud_connect
-i_connects = np.random.choice(np.arange(0, nb_inputs), nbtot_connections)
+i_connects = np.random.choice(np.arange(0, nbtot_connections), nbtot_connections, replace=False)
 j_connects = np.repeat(np.arange(0, nb_students), nb_stud_connect)
 syn_input_student.connect(i=i_connects, j=j_connects)
 syn_input_student.w = 0.3
@@ -99,7 +98,7 @@ syn_input_student.w = 0.3
 #The learning rate spread over a wide distribution
 learning_rates = np.zeros(nbtot_connections)
 for i in range(len(learning_rates)):
-    learning_rates[i] = 1 / (rnd.randint(20, 400))
+    learning_rates[i] = 1 / (rnd.randint(5, 100))
 syn_input_student.beta = learning_rates
 # syn_input_student.beta = 1/1000
 

@@ -3,7 +3,7 @@ from tools import *
 import random
 
 nb_inputs = 21
-data = np.loadtxt('spiketrains_0_input_pattern')
+data = np.loadtxt('spiketrains_0_input_pattern_solo')
 indices = data[:, 1].astype(int)
 times = data[:, 0] * second
 
